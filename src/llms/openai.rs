@@ -37,14 +37,16 @@ impl Debug for OpenAIClient {
 impl OpenAIClient {
     pub(crate) fn new(settings: OpenAISettings) -> Result<Self, anyhow::Error> {
         let api_base = settings.api_base.unwrap_or_default();
+        let api_key = settings.api_key.unwrap_or_default();
+        if api_key.is_empty() {
+            bail!("No OpenAI API key found. Please provide a valid API key.");
+        }
         let openai_config = if api_base.is_empty() {
-            let api_key = settings.api_key.unwrap_or_default();
-            if api_key.is_empty() {
-                bail!("No OpenAI API key found. Please provide a valid API key.");
-            }
             OpenAIConfig::new().with_api_key(api_key)
         } else {
-            OpenAIConfig::new().with_api_base(&api_base)
+            OpenAIConfig::new()
+                .with_api_base(&api_base)
+                .with_api_key(api_key)
         };
         let mut openai_client = Client::<OpenAIConfig>::with_config(openai_config);
         // TODO make configurable
